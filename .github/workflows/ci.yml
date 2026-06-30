@@ -36,7 +36,13 @@ jobs:
           go-version-file: "go.mod"
           cache: true
 
-      - name: make migrations
+      - name: Install golang-migrate
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.19.1/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate /usr/bin/
+          which migrate
+
+      - name: Run migrations
         run: make migrateup
 
       - name: Test
