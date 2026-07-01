@@ -5,15 +5,19 @@ import (
 	"database/sql"
 	"fmt"
 )
+type Store interface {
+	Querier
+	TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error)
+}
 
 // Store provides all functions to execute db queries and transactions
-type Store struct {
+type SQLStore struct {
 	*Queries
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewStore(db *sql.DB) Store {
+	return &SQLStore{
 		db:      db,
 		Queries: New(db),
 	}
@@ -21,7 +25,7 @@ func NewStore(db *sql.DB) *Store {
 
 // Notice that this func is not exported and thus starts with small letter
 // Cuz we dont want other packages to meddle with this func
-func (store *Store) execTx(ctx context.Context, fn func(*Queries) error) error {
+func (store *SQLStore) execTx(ctx context.Context, fn func(*Queries) error) error {
 	tx, err := store.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -63,7 +67,7 @@ type TransferTxResult struct {
 // TransferTx performs a money transfer from one account to another
 // It creates a transfer record, add account entries, and update
 // accounts' balance within a single database transaction
-func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
+func (store *SQLStore) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var result TransferTxResult
 
 
@@ -99,21 +103,7 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParams) (Trans
 		if err != nil {
 			return err
 		}
-		// update accouts' balance
-
-		// get account -> update it's balance
-		// fmt.Println(txName, "get account 1 for update")
-		// account1, err := q.GetAccountForUpdate(ctx, arg.FromAccountID)
-		// if err != nil {
-		// 	return err
-		// }
-		// fmt.Println(txName, "update account 1")
-		// result.FromAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
-		// 	ID: arg.FromAccountID,
-		// 	Balance: account1.Balance - arg.Amount,
-		// })
-		// ============
-		// why use to queries get and update? when you can just use one. Thus created new one which does both the jobs
+		
 		if arg.FromAccountID < arg.ToAccountID {
 			result.FromAccount, result.ToAccount, err = addMoney(ctx, q, arg.FromAccountID, -arg.Amount, arg.ToAccountID, arg.Amount)
 		} else {
