@@ -127,7 +127,7 @@ func TestGetAccountAPI(t *testing.T) {
 
 }
 
-func TestDeleteAccountRequest(t *testing.T) {
+func TestDeleteAccount(t *testing.T) {
 	account := randomAccount()
 
 	testCases := []struct {
@@ -312,8 +312,6 @@ func TestUpdateAccount(t *testing.T) {
 
 	for i := range testCases {
 		tc := testCases[i]
-		data, err := json.Marshal(tc.body)
-		require.NoError(t, err)
 
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
@@ -324,6 +322,9 @@ func TestUpdateAccount(t *testing.T) {
 
 			server := NewServer(store)
 			recorder := httptest.NewRecorder()
+
+			data, err := json.Marshal(tc.body)
+			require.NoError(t, err)
 
 			url := fmt.Sprintf("/accounts/%d", tc.accountID)
 			request, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))

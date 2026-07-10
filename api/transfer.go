@@ -53,7 +53,7 @@ func (server *Server) validAccount(ctx *gin.Context, accountID int64, currency s
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return false
 		}
-
+		// unexpected errror
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return false
 	}
