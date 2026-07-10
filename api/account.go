@@ -151,6 +151,11 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 
 	account, err := server.store.UpdateAccount(ctx, arg)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
