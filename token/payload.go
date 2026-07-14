@@ -46,6 +46,15 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	return payload, nil
 }
 
+// jwt/v5 validates using getter so this exists for makers
+// that check expiry themselves
+func (payload *Payload) Valid() error {
+	if time.Now().After(payload.ExpiredAt) {
+		return ErrExpiredToken
+	}
+	return nil
+}
+
 func (payload *Payload) GetExpirationTime() (*jwt.NumericDate, error) {
 	return jwt.NewNumericDate(payload.ExpiredAt), nil
 }
