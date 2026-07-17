@@ -67,7 +67,6 @@ func (server *Server) getAccount(ctx *gin.Context) {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
-
 		// db failed to fetch the account due to internal error
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -124,13 +123,25 @@ func (server *Server) deleteAccount(ctx *gin.Context) {
 		return
 	}
 
-	err := server.store.DeleteAccount(ctx, req.ID)
+	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	err = server.store.DeleteAccount(ctx, req.ID)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -155,18 +166,31 @@ func (server *Server) updateAccount(ctx *gin.Context) {
 		return
 	}
 
-	arg := db.UpdateAccountParams{
-		ID:      req.ID,
-		Balance: req.Balance,
-	}
-
-	account, err := server.store.UpdateAccount(ctx, arg)
+	account, err := server.store.GetAccount(ctx, req.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
 
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	arg := db.UpdateAccountParams{
+		ID:      req.ID,
+		Balance: req.Balance,
+	}
+
+	account, err = server.store.UpdateAccount(ctx, arg)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
