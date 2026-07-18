@@ -33,7 +33,9 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 
 	// registering our custom validator with gin
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("currency", validCurrency)
+		if err := v.RegisterValidation("currency", validCurrency); err != nil {
+			return nil, err
+		}
 	}
 
 	server.setupRouter()
