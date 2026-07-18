@@ -1,7 +1,7 @@
 # while working with a team, these commands will be helpful for your teammates 
 # to setup the database on their local machines.
 postgres:
-	docker run --name postgres18 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:18-alpine
+	docker run --name postgres18 --network bank-network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:18-alpine
 
 createdb:
 	docker exec -it postgres18 createdb --username=root --owner=root simple_bank
