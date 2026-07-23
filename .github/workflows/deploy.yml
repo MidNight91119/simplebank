@@ -38,3 +38,21 @@ jobs:
         run: |
           docker build -t $REGISTRY/$REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.36.0'
+        id: install
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --region ap-south-1 --name simple-bank
+      
+      - name: Deploy to EKS
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: simplebank
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          kubectl apply -f eks/deployment.yaml -f eks/service.yaml
+          kubectl set image deployment/simple-bank-api-deployment simple-bank-api=$REGISTRY/$REPOSITORY:$IMAGE_TAG
