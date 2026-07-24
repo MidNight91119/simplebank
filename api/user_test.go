@@ -226,3 +226,5 @@ func TestCreateUser(t *testing.T) {
 		})
 	}
 }
+
+// TODO: TestLoginUser
