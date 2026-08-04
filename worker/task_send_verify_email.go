@@ -39,7 +39,7 @@ func (distributor *RedisTaskDistributor) DistributeTaskSendVerifyEmail(
 
 func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Context, task *asynq.Task) error {
 	var payload PayloadSendVerifyEmail
-	if err := json.Unmarshal(task.Payload()); err != nil {
+	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal payload: %w", asynq.SkipRetry)
 	}
 
@@ -48,7 +48,7 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("user does not exist: %w", asynq.SkipRetry)
 		}
-		return fmt.Errorf("failed to get user: %w", asynq.SkipRetry)
+		return fmt.Errorf("failed to get user: %w", err)
 	}
 
 	// TODO: send email to user
