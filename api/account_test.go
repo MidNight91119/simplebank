@@ -16,7 +16,6 @@ import (
 	"github.com/MidNight91119/simplebank/db/util"
 	"github.com/MidNight91119/simplebank/token"
 	"github.com/gin-gonic/gin"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 )
@@ -117,7 +116,7 @@ func TestGetAccountAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.Account{}, sql.ErrNoRows)
+					Return(db.Account{}, db.ErrRecordNotFound)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -262,7 +261,7 @@ func TestDeleteAccount(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.Account{}, sql.ErrNoRows)
+					Return(db.Account{}, db.ErrRecordNotFound)
 				store.EXPECT().
 					DeleteAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(0)
@@ -453,7 +452,7 @@ func TestUpdateAccount(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account.ID)).
 					Times(1).
-					Return(db.Account{}, sql.ErrNoRows)
+					Return(db.Account{}, db.ErrRecordNotFound)
 				store.EXPECT().
 					UpdateAccount(gomock.Any(), gomock.Any()).
 					Times(0)
@@ -612,7 +611,7 @@ func TestCreateAccount(t *testing.T) {
 				store.EXPECT().
 					CreateAccount(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Account{}, &pq.Error{Code: "23505"})
+					Return(db.Account{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
@@ -630,7 +629,7 @@ func TestCreateAccount(t *testing.T) {
 				store.EXPECT().
 					CreateAccount(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.Account{}, &pq.Error{Code: "23503"})
+					Return(db.Account{}, db.ErrForeignKeyViolation)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
