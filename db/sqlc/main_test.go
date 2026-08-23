@@ -1,30 +1,28 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"os"
 	"testing"
 
 	"github.com/MidNight91119/simplebank/db/util"
-	_ "github.com/lib/pq" // Side-effect import registers "postgres" driver
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var testQueries *Queries
-var testDb *sql.DB
+var testStore Store
 
 func TestMain(m *testing.M) {
 	config, err := util.LoadConfig("../..")
 	if err != nil {
 		log.Fatal("cannot find config:", err)
 	}
-	
-	testDb, err = sql.Open(config.DBDriver, config.DBSource)
+
+	connPool, err := pgxpool.New(context.Background(), config.DBSource)
 	if err != nil {
 		log.Fatal("Cannot connect to the Database (db): ", err)
 	}
 
-	testQueries = New(testDb)
-
+	testStore = NewStore(connPool)
 	os.Exit(m.Run())
 }

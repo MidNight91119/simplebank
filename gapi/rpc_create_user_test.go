@@ -13,7 +13,6 @@ import (
 	"github.com/MidNight91119/simplebank/pb"
 	"github.com/MidNight91119/simplebank/worker"
 	mockwk "github.com/MidNight91119/simplebank/worker/mock"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc/codes"
@@ -154,7 +153,7 @@ func TestCreateUser(t *testing.T) {
 				store.EXPECT().
 					CreateUserTx(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.CreateUserTxResult{}, &pq.Error{Code: "23505"})
+					Return(db.CreateUserTxResult{}, db.ErrUniqueViolation)
 
 				taskDistributor.EXPECT().
 					DistributeTaskSendVerifyEmail(gomock.Any(), gomock.Any(), gomock.Any()).
