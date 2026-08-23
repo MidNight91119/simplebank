@@ -66,7 +66,7 @@ func TestUpdateUser(t *testing.T) {
 					Return(updatedUser, nil)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
-				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+				return newContextWithBearerToken(t, tokenMaker, user.Username, user.Role, time.Minute)
 			},
 			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
 				require.NoError(t, err)
@@ -91,7 +91,7 @@ func TestUpdateUser(t *testing.T) {
 					Return(db.User{}, db.ErrRecordNotFound)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
-				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+				return newContextWithBearerToken(t, tokenMaker, user.Username, user.Role, time.Minute)
 			},
 			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
 				require.Error(t, err)
@@ -113,7 +113,7 @@ func TestUpdateUser(t *testing.T) {
 					Times(0)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
-				return newContextWithBearerToken(t, tokenMaker, user.Username, -time.Minute)
+				return newContextWithBearerToken(t, tokenMaker, user.Username, user.Role, -time.Minute)
 			},
 			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
 				require.Error(t, err)
@@ -157,7 +157,7 @@ func TestUpdateUser(t *testing.T) {
 					Times(0)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
-				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+				return newContextWithBearerToken(t, tokenMaker, user.Username, user.Role, time.Minute)
 			},
 			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
 				require.Error(t, err)
@@ -179,7 +179,7 @@ func TestUpdateUser(t *testing.T) {
 					Times(0)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
-				return newContextWithBearerToken(t, tokenMaker, wrongUser, time.Minute)
+				return newContextWithBearerToken(t, tokenMaker, wrongUser, user.Role, time.Minute)
 			},
 			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
 				require.Error(t, err)
@@ -202,13 +202,57 @@ func TestUpdateUser(t *testing.T) {
 					Return(db.User{}, sql.ErrConnDone)
 			},
 			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
-				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+				return newContextWithBearerToken(t, tokenMaker, user.Username, user.Role, time.Minute)
 			},
 			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
 				require.Error(t, err)
 				st, ok := status.FromError(err)
 				require.True(t, ok)
 				require.Equal(t, codes.Internal, st.Code())
+			},
+		},
+		{
+			name: "BankerCanUpdateOtherUser",
+			req: &pb.UpdateUserRequest{
+				Username: user.Username,
+				FullName: &newName,
+				Email:    &newEmail,
+			},
+			buildstubs: func(store *mockdb.MockStore) {
+				arg := db.UpdateUserParams{
+					Username: user.Username,
+					FullName: pgtype.Text{
+						String: newName,
+						Valid:  true,
+					},
+					Email: pgtype.Text{
+						String: newEmail,
+						Valid:  true,
+					},
+				}
+				updatedUser := db.User{
+					Username:          user.Username,
+					FullName:          newName,
+					Email:             newEmail,
+					HashedPassword:    user.HashedPassword,
+					PasswordChangedAt: user.PasswordChangedAt,
+					IsEmailVerified:   user.IsEmailVerified,
+				}
+				store.EXPECT().
+					UpdateUser(gomock.Any(), gomock.Eq(arg)).
+					Times(1).
+					Return(updatedUser, nil)
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, wrongUser, util.BankerRole, time.Minute)
+			},
+			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
+				require.NoError(t, err)
+				require.NotNil(t, res)
+				updatedUser := res.GetUser()
+				require.Equal(t, user.Username, updatedUser.Username)
+				require.Equal(t, newName, updatedUser.FullName)
+				require.Equal(t, newEmail, updatedUser.Email)
 			},
 		},
 	}

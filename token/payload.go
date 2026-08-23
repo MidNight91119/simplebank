@@ -21,6 +21,7 @@ type Payload struct {
 	// in case they're leaked, thus an ID field to uniquely identify tokens
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
+	Role      string    `json:"role"`
 	IssuedAt  time.Time `json:"issued_at"`
 	ExpiredAt time.Time `json:"expired_at"`
 }
@@ -28,7 +29,7 @@ type Payload struct {
 // After defining a struct, you need a way to create it, thus,
 // such times demand a create func
 // NewPayload creates a new token payload with a specific username and duration
-func NewPayload(username string, duration time.Duration) (*Payload, error) {
+func NewPayload(username string, role string, duration time.Duration) (*Payload, error) {
 	// first, let's generate a new unique token id
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
@@ -39,6 +40,7 @@ func NewPayload(username string, duration time.Duration) (*Payload, error) {
 	payload := &Payload{
 		ID:        tokenID,
 		Username:  username,
+		Role:      role,
 		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(duration),
 	}
