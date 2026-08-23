@@ -5,11 +5,12 @@ Project simple_bank {
 
 Table users as U {
   username varchar [pk]
+  role varchar [not null, default: 'depositor']
   hashed_password varchar [not null]
   full_name varchar [not null]
   email varchar [unique, not null]
   is_email_verified bool [not null, default: false]
-  password_changed_at timestamptz [not null, default: `0001-01-01 00:00:00Z`]
+  password_changed_at timestamptz [not null, default: '0001-01-01 00:00:00Z']
   created_at timestamptz [not null, default: `now()`]
 }
 
@@ -30,7 +31,7 @@ Table accounts as A {
   currency varchar [not null]
   created_at timestamptz [not null, default: `now()`]
 
-  Indexes {
+  indexes {
     owner
     (owner, currency) [unique]
   }
@@ -42,7 +43,7 @@ Table entries {
   amount bigint [not null, note: 'can be negative or positive']
   created_at timestamptz [not null, default: `now()`]
 
-  Indexes {
+  indexes {
     account_id
   }
 }
@@ -54,7 +55,7 @@ Table transfers {
   amount bigint [not null, note: 'must be positive']
   created_at timestamptz [not null, default: `now()`]
 
-  Indexes {
+  indexes {
     from_account_id
     to_account_id
     (from_account_id, to_account_id)

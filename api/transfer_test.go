@@ -64,7 +64,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
@@ -94,7 +94,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "UnauthorizedFromUser",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "unauthorized_user", time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, "unauthorized_user", util.DepositorRole, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
@@ -121,7 +121,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "FromAccountNotFound",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
@@ -148,7 +148,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "ToAccountNotFound",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
@@ -176,7 +176,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "CurrencyMismatch",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
@@ -225,7 +225,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "InvalidCurrency",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
@@ -248,7 +248,7 @@ func TestCreateTransfer(t *testing.T) {
 		{
 			name: "TransferTxError",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, time.Minute)
+				addAuthorization(t, request, tokenMaker, authorizationTypeBearer, user1.Username, user1.Role, time.Minute)
 			},
 			body: gin.H{
 				"from_account_id": account1.ID,
