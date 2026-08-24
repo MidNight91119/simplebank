@@ -24,6 +24,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/rs/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -156,8 +157,22 @@ func runGatewayServer(
 	fileServer := http.FileServer(http.FS(swaggerSub))
 	mux.Handle("/swagger/", http.StripPrefix("/swagger/", fileServer))
 
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPatch,
+			http.MethodDelete,
+			http.MethodOptions,
+			http.MethodHead,
+		},
+		AllowedHeaders: []string{"*"},
+	})
+
+	handler := c.Handler(gapi.HttpLogger(mux))
 	httpServer := &http.Server{
-		Handler: gapi.HttpLogger(mux),
+		Handler: handler,
 		Addr:    config.HTTPServerAddress,
 	}
 
